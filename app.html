@@ -7,81 +7,78 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .app { max-width: 1080px; margin: 0 auto; padding: 40px 24px; }
-    .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-bottom: 20px; }
-    .panel h3 { margin-bottom: 8px; }
-    .muted { color: var(--muted); font-size: 14px; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    input, select { background: var(--bg); border: 1px solid var(--line); color: var(--text); padding: 10px 14px; border-radius: 8px; font-size: 14px; }
-    input[type=text], input[type=password] { min-width: 260px; }
-    label { font-size: 13px; color: var(--muted); }
-    .status { font-family: var(--mono); font-size: 13px; color: var(--gr); }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
-    th { color: var(--muted); font-weight: 600; }
-    .old { color: var(--muted); text-decoration: line-through; }
-    .new { color: var(--gr); }
-    .scroll { max-height: 480px; overflow: auto; }
-    .progress { height: 6px; background: var(--line); border-radius: 4px; overflow: hidden; margin-top: 12px; }
-    .progress > div { height: 100%; background: linear-gradient(90deg, var(--acc), var(--acc2)); width: 0; transition: width .2s; }
-    .hidden { display: none; }
-    .tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: rgba(108,92,231,.15); color: var(--acc2); }
-  </style>
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
   <header class="nav">
     <div class="nav-inner">
       <a class="logo" href="/TitleForge/"><span class="logo-mark">⚒️</span> <span>TitleForge</span></a>
-      <nav><a href="/TitleForge/">Home</a><a href="https://github.com/JustJayDev/TitleForge" target="_blank" rel="noreferrer">Source</a></nav>
+      <nav>
+        <a href="/TitleForge/">Home</a>
+        <a href="https://github.com/JustJayDev/TitleForge" target="_blank" rel="noreferrer">Source</a>
+        <button class="btn btn-ghost hidden" id="btn-disconnect">Disconnect</button>
+      </nav>
     </div>
   </header>
 
   <div class="app">
     <!-- STEP 1: Connect -->
     <div class="panel" id="step-connect">
-      <h3>1 · Connect your channel</h3>
-      <p class="muted">Sign in with Google. Your token stays in your browser only.</p>
+      <div class="panel-head">
+        <h3>1 · Connect your channel</h3>
+        <span class="step-badge">Start here</span>
+      </div>
+      <p class="muted">Sign in with Google. Your token stays in your browser only — nothing touches our servers.</p>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-primary" id="btn-connect">Connect with Google</button>
         <span class="status hidden" id="connected-ok">✓ Connected</span>
       </div>
-      <p class="muted" style="margin-top:12px">Or paste a token manually:</p>
+      <div class="divider"><span>or</span></div>
+      <p class="muted">Paste an access token manually:</p>
       <div class="row" style="margin-top:8px">
-        <input type="password" id="token-input" placeholder="Paste access token" />
+        <input type="password" id="token-input" placeholder="Paste access token (ya29.…)" />
         <button class="btn btn-ghost" id="btn-token">Use token</button>
       </div>
+      <p class="hint" id="connect-hint">First time? Watch the <strong>2-minute setup</strong> → <span class="mono">README.md</span></p>
     </div>
 
     <!-- STEP 2: Fetch -->
     <div class="panel hidden" id="step-fetch">
-      <h3>2 · Load your videos</h3>
+      <div class="panel-head">
+        <h3>2 · Load your videos</h3>
+        <span class="status" id="fetch-status"></span>
+      </div>
+      <p class="muted" id="step-fetch-hint">Fetching every video you've uploaded — titles, descriptions, and performance stats.</p>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-primary" id="btn-fetch">Load all videos</button>
-        <span class="status" id="fetch-status"></span>
       </div>
       <div class="progress hidden" id="fetch-progress"><div id="fetch-bar"></div></div>
     </div>
 
     <!-- STEP 3: AI Settings + Forge -->
     <div class="panel hidden" id="step-ai">
-      <h3>3 · AI engine &amp; Forge titles</h3>
-      <div class="row" style="margin-top:14px">
+      <div class="panel-head">
+        <h3>3 · AI engine &amp; forge titles</h3>
+        <span class="status" id="ai-count"></span>
+      </div>
+      <div class="ai-grid" style="margin-top:16px">
         <div>
-          <label>AI Provider</label><br/>
+          <label>AI Provider</label>
           <select id="provider">
             <option value="default">Default (free)</option>
             <option value="openai">OpenAI</option>
             <option value="claude">Claude</option>
             <option value="gemini">Gemini</option>
           </select>
+          <p class="hint" id="provider-hint"></p>
+        </div>
+        <div id="apikey-wrap">
+          <label>API Key</label>
+          <input type="password" id="apikey" placeholder="sk-…" />
+          <p class="hint">Stays in your browser. Never sent anywhere but the provider.</p>
         </div>
         <div>
-          <label>API Key (optional)</label><br/>
-          <input type="password" id="apikey" placeholder="sk-..." />
-        </div>
-        <div>
-          <label>Style</label><br/>
+          <label>Style</label>
           <select id="style">
             <option value="auto">Auto (best)</option>
             <option value="gaming">Gaming</option>
@@ -89,30 +86,44 @@
             <option value="educational">Educational</option>
             <option value="shorts">Shorts</option>
           </select>
+          <p class="hint">Tone the AI aims for.</p>
         </div>
+      </div>
+      <div class="row" style="margin-top:18px">
         <button class="btn btn-primary" id="btn-forge">⚡ Forge titles</button>
+        <button class="btn btn-ghost hidden" id="btn-stop-forge">Stop</button>
       </div>
       <div class="progress hidden" id="forge-progress"><div id="forge-bar"></div></div>
+      <p class="hint" id="forge-status" style="margin-top:10px"></p>
     </div>
 
     <!-- STEP 4: Preview + Apply -->
     <div class="panel hidden" id="step-preview">
-      <h3>4 · Review &amp; apply</h3>
-      <div class="row" style="justify-content:space-between; margin-bottom:14px">
-        <span class="status" id="preview-count"></span>
-        <div class="row">
-          <button class="btn btn-ghost" id="btn-select-all">Select all</button>
-          <button class="btn btn-primary" id="btn-apply">Apply selected</button>
-        </div>
+      <div class="panel-head">
+        <h3>4 · Review &amp; apply</h3>
+        <span class="status" id="preview-seo"></span>
       </div>
+      <div class="toolbar">
+        <label class="check-inline"><input type="checkbox" id="only-changed" checked /> Only changed</label>
+        <input type="search" id="search" placeholder="Search titles…" class="search-input" />
+        <div class="spacer"></div>
+        <button class="btn btn-ghost" id="btn-select-all">Select all</button>
+        <button class="btn btn-ghost" id="btn-select-none">Select none</button>
+        <button class="btn btn-ghost" id="btn-export">Export CSV</button>
+        <button class="btn btn-primary" id="btn-apply" disabled>Apply selected</button>
+        <button class="btn btn-undo hidden" id="btn-undo">↩ Undo applied</button>
+      </div>
+      <p class="status" id="preview-count" style="margin:10px 0"></p>
       <div class="scroll">
         <table id="preview-table">
-          <thead><tr><th></th><th>Old title</th><th>New title</th><th>SEO</th></tr></thead>
+          <thead><tr><th style="width:34px"></th><th>Old title</th><th>New title (edit freely)</th><th>SEO</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <div id="toasts"></div>
 
   <script src="app.js"></script>
 </body>
