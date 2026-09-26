@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TitleForge — AI-powered bulk YouTube title renamer. Connect your channel, AI analyzes every video and forges perfect titles, apply in one click." />
+  <title>TitleForge — Forge Better YouTube Titles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="logo" href="/TitleForge/">
+        <span class="logo-mark">⚒️</span> <span>TitleForge</span>
+      </a>
+      <nav>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn btn-ghost" href="app.html">Open App</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="badge">Free · Open Source · Browser-based</div>
+    <h1>Forge <span class="grad">perfect</span> YouTube titles<br />for <span class="grad">every</span> video you own.</h1>
+    <p class="sub">Connect your channel. TitleForge's AI analyzes all your videos — views, content, performance — and rewrites every title to earn more clicks. Review, then apply in one click.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="app.html">⚡ Connect &amp; Forge</a>
+      <a class="btn btn-ghost" href="https://github.com/JustJayDev/TitleForge" target="_blank" rel="noreferrer">View Source</a>
+    </div>
+    <div class="hero-note mono">No account needed · token stays in your browser · 88 videos in under a minute</div>
+  </section>
+
+  <section id="how" class="section">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><h3>Connect</h3><p>Sign in with Google. Your token stays in your browser only — never on our servers.</p></div>
+      <div class="step"><div class="step-n">2</div><h3>Analyze</h3><p>AI reads every video's title, description, views, likes &amp; comments to understand your content.</p></div>
+      <div class="step"><div class="step-n">3</div><h3>Forge</h3><p>Fresh, click-worthy titles generated for every video — scored for SEO &amp; CTR.</p></div>
+      <div class="step"><div class="step-n">4</div><h3>Apply</h3><p>Review the preview table (edit anything), then bulk-apply with one click. Undo anytime.</p></div>
+    </div>
+  </section>
+
+  <section id="features" class="section alt">
+    <h2>Features</h2>
+    <div class="grid">
+      <div class="card"><h3>🤖 AI Title Engine</h3><p>Content-aware titles tuned to what performs best on your channel.</p></div>
+      <div class="card"><h3>🧠 Bring Your Own AI</h3><p>Use the free default model, or paste your own OpenAI / Claude / Gemini key.</p></div>
+      <div class="card"><h3>⚡ Bulk Apply</h3><p>Rename 10 or 1,000 videos in one click with live progress.</p></div>
+      <div class="card"><h3>🔒 Private by Design</h3><p>Token in sessionStorage only. Zero server storage. Open source &amp; auditable.</p></div>
+      <div class="card"><h3>📊 SEO Score</h3><p>See click-worthiness before &amp; after for every title.</p></div>
+      <div class="card"><h3>↩️ Undo</h3><p>Roll back any rename instantly. No lock-in.</p></div>
+    </div>
+  </section>
+
+  <section id="faq" class="section">
+    <h2>FAQ</h2>
+    <div class="faq">
+      <details><summary>Is it really free?</summary><p>Yes. The default AI model is free. You can bring your own API key for more control or higher limits.</p></details>
+      <details><summary>Is my data safe?</summary><p>Your Google token lives only in your browser's sessionStorage and is cleared when you close the tab. We never store it.</p></details>
+      <details><summary>How many videos can I rename?</summary><p>As many as you have. The YouTube API gives 10,000 free quota units/day per project.</p></details>
+      <details><summary>Do I need to be technical?</summary><p>No. Connect with Google, review the preview, click apply. That's it.</p></details>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p><strong>TitleForge</strong> — built by <a href="https://justjaydev.github.io/" target="_blank" rel="noreferrer">JustJayDev</a></p>
+    <p class="mono">MIT Licensed · <a href="https://github.com/JustJayDev/TitleForge" target="_blank" rel="noreferrer">GitHub</a></p>
+  </footer>
+</body>
+</html>
