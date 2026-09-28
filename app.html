@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="premium.css" />
 </head>
 <body>
   <header class="nav">
@@ -22,6 +23,12 @@
   </header>
 
   <div class="app">
+  <div class="rail" id="rail">
+    <span class="rail-step" data-step="connect"><span class="n">1</span> Connect</span>
+    <span class="rail-step" data-step="fetch"><span class="n">2</span> Load videos</span>
+    <span class="rail-step" data-step="forge"><span class="n">3</span> Forge titles</span>
+    <span class="rail-step" data-step="apply"><span class="n">4</span> Review &amp; apply</span>
+  </div>
     <!-- STEP 1: Connect -->
     <div class="panel" id="step-connect">
       <div class="panel-head">
@@ -58,25 +65,23 @@
     <!-- STEP 3: AI Settings + Forge -->
     <div class="panel hidden" id="step-ai">
       <div class="panel-head">
-        <h3>3 · AI engine &amp; forge titles</h3>
+        <h3>3 · Forge titles</h3>
         <span class="status" id="ai-count"></span>
       </div>
+
+      <div class="vault-box">
+        <div class="vault-head">
+          <span class="vault-ico">⚒️</span>
+          <div>
+            <div class="vault-title">Developer Vault</div>
+            <div class="vault-sub">The AI key lives server-side. Nothing secret ever loads in this page.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-vault">Connect the Vault</button>
+        </div>
+        <span class="status" id="vault-status"></span>
+      </div>
+
       <div class="ai-grid" style="margin-top:16px">
-        <div>
-          <label>AI Provider</label>
-          <select id="provider">
-            <option value="default">Default (free)</option>
-            <option value="openai">OpenAI</option>
-            <option value="claude">Claude</option>
-            <option value="gemini">Gemini</option>
-          </select>
-          <p class="hint" id="provider-hint"></p>
-        </div>
-        <div id="apikey-wrap">
-          <label>API Key</label>
-          <input type="password" id="apikey" placeholder="sk-…" />
-          <p class="hint">Stays in your browser. Never sent anywhere but the provider.</p>
-        </div>
         <div>
           <label>Style</label>
           <select id="style">
@@ -125,6 +130,6 @@
 
   <div id="toasts"></div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

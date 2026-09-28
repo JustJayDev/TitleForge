@@ -1,0 +1,93 @@
+/* ============================================================
+   TitleForge v2 — PREMIUM LAYER
+   On top of the existing dark-neon theme. Adds the Vault connection
+   card, a step rail, glass panels, and refined motion.
+   ============================================================ */
+
+/* ---- Vault connection card ---- */
+.vault-box {
+  position: relative; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 8%, var(--card)), var(--card));
+  border: 1px solid color-mix(in srgb, var(--acc) 38%, var(--line));
+  border-radius: 12px; padding: 16px 18px;
+}
+.vault-box::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(340px 130px at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--acc2) 16%, transparent), transparent 66%);
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.vault-box:hover::after { opacity: 1; }
+.vault-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vault-ico { font-size: 22px; flex: none; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--acc2) 55%, transparent)); }
+.vault-title { font-weight: 800; font-size: 15px; }
+.vault-sub { font-size: 12px; color: var(--muted); margin-top: 2px; max-width: 420px; }
+.vault-box .btn-sm { margin-left: auto; }
+.vault-box .status { display: inline-block; margin-top: 10px; }
+
+/* ---- step rail (premium progress) ---- */
+.rail { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 20px; }
+.rail-step {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; color: var(--muted);
+  border: 1px solid var(--line); background: color-mix(in srgb, var(--bg2) 70%, transparent);
+  transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.rail-step .n {
+  width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: color-mix(in srgb, var(--muted) 18%, transparent); color: var(--muted);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.rail-step.on  { color: var(--acc2); border-color: color-mix(in srgb, var(--acc2) 45%, transparent); }
+.rail-step.on .n { background: color-mix(in srgb, var(--acc2) 22%, transparent); color: var(--acc2); }
+.rail-step.done { color: var(--gr); border-color: color-mix(in srgb, var(--gr) 42%, transparent); }
+.rail-step.done .n { background: color-mix(in srgb, var(--gr) 20%, transparent); color: var(--gr); }
+
+/* ---- premium panel polish ---- */
+.panel {
+  position: relative;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .28);
+}
+.panel::after {
+  content: ''; position: absolute; inset: 0; border-radius: 14px; pointer-events: none;
+  background: radial-gradient(420px 150px at var(--mx, 50%) var(--my, 0%),
+    color-mix(in srgb, var(--acc) 9%, transparent), transparent 66%);
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.panel:hover::after { opacity: 1; }
+
+/* ---- hero aurora ---- */
+.hero { position: relative; }
+.hero-aurora { position: absolute; inset: -20% -10% 0; pointer-events: none; z-index: 0; filter: blur(56px); opacity: 0.5; }
+.hero-aurora span { position: absolute; display: block; border-radius: 50%; animation: auroraDrift 18s ease-in-out infinite alternate; }
+.hero-aurora span:nth-child(1) { width: 44vw; height: 44vw; left: -6%; top: -12%; background: radial-gradient(circle, color-mix(in srgb, var(--acc) 42%, transparent), transparent 66%); }
+.hero-aurora span:nth-child(2) { width: 36vw; height: 36vw; right: -4%; top: 4%; background: radial-gradient(circle, color-mix(in srgb, var(--acc2) 34%, transparent), transparent 66%); animation-delay: -6s; }
+.hero-aurora span:nth-child(3) { width: 28vw; height: 28vw; left: 34%; bottom: -20%; background: radial-gradient(circle, color-mix(in srgb, var(--acc2) 20%, transparent), transparent 66%); animation-delay: -11s; }
+@keyframes auroraDrift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(4vw, -3vh, 0) scale(1.08); }
+  100% { transform: translate3d(-3vw, 2vh, 0) scale(0.96); }
+}
+.hero > * { position: relative; z-index: 1; }
+
+/* ---- staggered reveal ---- */
+.rise { opacity: 0; transform: translateY(20px); transition: opacity 0.6s cubic-bezier(0.16, 0.84, 0.24, 1), transform 0.6s cubic-bezier(0.16, 0.84, 0.24, 1); }
+.rise.in { opacity: 1; transform: none; }
+.rise.d1 { transition-delay: 0.06s; }
+.rise.d2 { transition-delay: 0.12s; }
+.rise.d3 { transition-delay: 0.18s; }
+.rise.d4 { transition-delay: 0.24s; }
+
+/* ---- shimmer for loading numbers ---- */
+@keyframes textShimmer { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.text-shimmer { animation: textShimmer 1.4s ease-in-out infinite; }
+
+/* ---- toast polish ---- */
+.toast { backdrop-filter: blur(10px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-aurora span { animation: none; }
+  .rise { opacity: 1; transform: none; }
+}

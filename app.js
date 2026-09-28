@@ -1,3 +1,5 @@
+import { DevVaultClient } from './vault.js';
+
 /* =============================================================
  * TitleForge — core app logic
  * Connect -> Fetch -> Forge -> Review -> Apply (-> Undo)
@@ -13,6 +15,18 @@ let videos = [];            // fetched videos
 let forged = [];            // {id, oldTitle, newTitle, seoOld, seoNew, selected, applied}
 let appliedHistory = [];    // [{id, oldTitle}] for undo
 let connectedChannel = null;
+
+/* the DevVault instance — the AI key lives server-side, never here */
+let _vault = null;
+function getVault() {
+  if (!_vault) {
+    _vault = new DevVaultClient({
+      redirectUri: location.origin + location.pathname,
+      project: 'youtube-ai',
+    });
+  }
+  return _vault;
+}
 let forgeAbort = false;
 
 /* --- Config ----------------------------------------------------
@@ -28,19 +42,9 @@ const CONFIG = {
   CLIENT_ID: '135469633703-c95kvlba4i5qiuibnnpn06g9ns7aamfe.apps.googleusercontent.com',
   REDIRECT_URI: window.location.origin + window.location.pathname,
   SCOPES: 'https://www.googleapis.com/auth/youtube.force-ssl',
-  // Free default model — OpenAI-compatible gateway. Users never need a key.
-  DEFAULT_AI: {
-    baseUrl: 'https://inference.dahl.global/v1',
-    key: 'PASTE_FREE_DEFAULT_KEY', // set at deploy time; see README
-    model: 'deepseek-ai/DeepSeek-V4-Flash-0731',
-  },
 };
 
-const MODELS = {
-  openai: 'gpt-4o-mini',
-  claude: 'claude-3-5-haiku-latest',
-  gemini: 'gemini-1.5-flash',
-};
+
 
 /* --- UI helpers --- */
 function show(id) { $(id)?.classList.remove('hidden'); }
@@ -62,6 +66,32 @@ function toast(msg, type = 'info') {
   }, 4200);
 }
 
+/* --- premium: reveal-on-scroll, step rail, cursor glow --- */
+function paintRail(active) {
+  document.querySelectorAll('.rail-step').forEach((el) => {
+    const name = el.dataset.step;
+    el.classList.toggle('on', name === active);
+    const order = { connect: 0, fetch: 1, forge: 2, apply: 3 };
+    el.classList.toggle("done", order[name] < (order[active] ?? 99));
+  });
+}
+
+function revealAll() {
+  document.querySelectorAll('.rise').forEach((el) => el.classList.add('in'));
+}
+
+function trackGlow() {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  window.addEventListener("pointermove", (e) => {
+    document.querySelectorAll('.panel, .vault-box').forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (e.clientX < r.left - 60 || e.clientX > r.right + 60 ||
+          e.clientY < r.top - 60 || e.clientY > r.bottom + 60) return;
+      el.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%");
+      el.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%");
+    });
+  }, { passive: true });
+}
 /* --- OAuth (Google, implicit flow) --- */
 function startOAuth() {
   if (!CONFIG.CLIENT_ID || CONFIG.CLIENT_ID.startsWith('PASTE_')) {
@@ -118,6 +148,7 @@ async function connected() {
     }
   } catch (e) { /* token still usable */ }
   show('step-fetch-hint');
+  paintRail('fetch');
 }
 
 function disconnect() {
@@ -191,6 +222,7 @@ async function loadVideos() {
   setStatus('fetch-status', 'Loaded ' + videos.length + ' videos');
   hide('step-fetch');
   show('step-ai');
+  paintRail('forge');
   setStatus('ai-count', videos.length + ' videos queued');
 }
 
@@ -201,17 +233,17 @@ function setBar(id, pct) {
 }
 
 /* --- AI Engine (pluggable, concurrent) --- */
+/* --- AI Engine (Vault-backed, concurrent) --- */
+/* The AI key is never in this bundle. The browser sends only video
+   metadata + style to the Vault, which holds the key server-side and
+   returns clean titles. Batching cuts request count ~50x. */
+const FORGE_BATCH = 20;
+
 async function forgeTitles() {
-  const provider = $('provider').value;
-  const apiKey = $('apikey').value.trim();
   const style = $('style').value;
 
-  if (provider === 'default' && (!CONFIG.DEFAULT_AI.key || CONFIG.DEFAULT_AI.key.startsWith('PASTE_'))) {
-    toast('Free default model is not configured yet. Add DEFAULT_AI.key in app.js, or use your own key.', 'warn');
-    return;
-  }
-  if (provider !== 'default' && !apiKey) {
-    toast('Paste your ' + provider + ' API key first.', 'warn');
+  if (!getVault().isAuthenticated()) {
+    toast('Connect the Vault first — it holds the AI key.', 'warn');
     return;
   }
 
@@ -227,25 +259,37 @@ async function forgeTitles() {
 
   let done = 0;
   const total = forged.length;
-  const queue = forged.map((_, i) => i);
+  const batches = [];
+  for (let i = 0; i < total; i += FORGE_BATCH) {
+    batches.push(videos.slice(i, i + FORGE_BATCH).map((v, j) => ({
+      i: i + j,
+      title: v.title,
+      description: v.description,
+      views: v.views,
+      likes: v.likes,
+      comments: v.comments,
+    })));
+  }
 
-  // Run N requests in parallel for a big speedup
-  const CONCURRENCY = Math.min(6, total);
+  const queue = batches.map((b) => b);
+  const CONCURRENCY = Math.min(3, queue.length);
   const workers = Array.from({ length: CONCURRENCY }, async () => {
     while (queue.length && !forgeAbort) {
-      const i = queue.shift();
-      const v = videos[i];
+      const batch = queue.shift();
       try {
-        const t = await generateTitle(v, provider, apiKey, style);
-        forged[i].newTitle = cleanTitle(t) || v.title;
-        forged[i].seoNew = seoScore(forged[i].newTitle);
+        const titles = await getVault().forgeTitles(batch, style);
+        for (let k = 0; k < batch.length; k++) {
+          const idx = batch[k].i;
+          const t = titles && titles[k];
+          forged[idx].newTitle = t || videos[idx].title;
+          forged[idx].seoNew = seoScore(forged[idx].newTitle);
+        }
       } catch (e) {
-        forged[i].newTitle = v.title;      // fallback: keep original
-        forged[i].seoNew = forged[i].seoOld;
+        /* keep originals on failure */
       }
-      done++;
-      setBar('forge-bar', Math.round((done / total) * 100));
-      setStatus('forge-status', 'Forging ' + done + '/' + total + '…');
+      done += batch.length;
+      setBar('forge-bar', Math.min(99, Math.round((done / total) * 100)));
+      setStatus('forge-status', 'Forging ' + Math.min(done, total) + '/' + total + '…');
     }
   });
   await Promise.all(workers);
@@ -256,6 +300,7 @@ async function forgeTitles() {
   renderPreview();
   hide('step-ai');
   show('step-preview');
+  paintRail('apply');
   const lift = avgLift();
   if (lift > 0) {
     setStatus('preview-seo', '▲ avg SEO ' + Math.round(avgSeo(forged.map((f) => f.seoOld))) +
@@ -267,7 +312,6 @@ async function forgeTitles() {
   const changed = forged.filter((f) => f.newTitle !== f.oldTitle).length;
   toast('Forged ' + changed + ' titles. Review before applying.', 'ok');
 }
-
 function stopForge() { forgeAbort = true; }
 
 /* Average SEO lift across changed titles */
@@ -279,106 +323,17 @@ function avgLift() {
 }
 
 /* Single-title generation — pluggable per provider */
-async function generateTitle(video, provider, apiKey, style) {
-  const prompt = buildPrompt(video, style);
-  switch (provider) {
-    case 'default': return callDefaultAI(prompt);
-    case 'openai':  return callOpenAI(prompt, apiKey);
-    case 'claude':  return callClaude(prompt, apiKey);
-    case 'gemini':  return callGemini(prompt, apiKey);
-    default:        return video.title;
-  }
-}
 
-function buildPrompt(video, style) {
-  return [
-    'You are a world-class YouTube title strategist. Rewrite this video title to maximize click-through rate while staying truthful to the content. Never invent facts, names, or claims that are not in the input.',
-    'Reply with the raw title text only — no quotes, no labels, no meta commentary, no character counts, no notes. One single line.',
-    'Maximum 70 characters. Title case or sentence case — no ALL CAPS. Do not end with a period.',
-    'Style: ' + style,
-    'Current title: ' + video.title,
-    'Description: ' + (video.description || '').slice(0, 400),
-    'Performance: ' + video.views + ' views, ' + video.likes + ' likes, ' + video.comments + ' comments',
-  ].join('\n');
-}
 
 /* --- Provider: free default (OpenAI-compatible gateway) --- */
-async function callDefaultAI(prompt) {
-  return openAICompatible(CONFIG.DEFAULT_AI.baseUrl, CONFIG.DEFAULT_AI.key, CONFIG.DEFAULT_AI.model, prompt);
-}
 
 /* --- Provider: OpenAI --- */
-async function callOpenAI(prompt, key) {
-  return openAICompatible('https://api.openai.com/v1', key, MODELS.openai, prompt);
-}
 
 /* Shared OpenAI-format chat completion */
-async function openAICompatible(base, key, model, prompt) {
-  const res = await fetch(base + '/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: 'system', content: 'You write high-CTR YouTube titles. Reply with only the title.' },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.8,
-      max_tokens: 120,
-    }),
-  });
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e.error?.message || 'AI error ' + res.status);
-  }
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
-}
 
 /* --- Provider: Claude (Anthropic) --- */
-async function callClaude(prompt, key) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    body: JSON.stringify({
-      model: MODELS.claude,
-      max_tokens: 120,
-      messages: [{ role: 'user', content: prompt }],
-    }),
-  });
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e.error?.message || 'Claude error ' + res.status);
-  }
-  const data = await res.json();
-  return data.content?.[0]?.text || '';
-}
 
 /* --- Provider: Gemini --- */
-async function callGemini(prompt, key) {
-  const res = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/' + MODELS.gemini + ':generateContent?key=' + key,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 120 },
-      }),
-    }
-  );
-  if (!res.ok) {
-    const e = await res.json().catch(() => ({}));
-    throw new Error(e.error?.message || 'Gemini error ' + res.status);
-  }
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-}
 
 /* Normalise model output into a single clean title line */
 function cleanTitle(raw) {
@@ -621,18 +576,39 @@ function exportCSV() {
 }
 
 /* --- Provider UI: show/hide key field, remember it --- */
-function syncProviderUI() {
-  const p = $('provider').value;
-  const keyWrap = $('apikey-wrap');
-  keyWrap.classList.toggle('hidden', p === 'default');
-  const hint = $('provider-hint');
-  if (p === 'default') hint.textContent = 'Free model · no key needed';
-  else if (p === 'openai') hint.textContent = 'platform.openai.com → API keys';
-  else if (p === 'claude') hint.textContent = 'console.anthropic.com → API keys';
-  else hint.textContent = 'aistudio.google.com → API key';
-  localStorage.setItem('tf_provider', p);
+/* --- Vault connection UI --- */
+function connectVault() {
+  window.location.href = getVault().authorizeUrl();
 }
 
+function disconnectVault() {
+  getVault().logout();
+  const btn = $('btn-vault');
+  if (btn) { btn.textContent = 'Connect the Vault'; btn.classList.remove('btn-ghost'); btn.classList.add('btn-primary'); }
+  const st = $('vault-status');
+  if (st) { st.textContent = ''; hide('vault-status'); }
+  toast('Vault disconnected. AI key access revoked for this tab.', 'info');
+}
+
+function paintVaultState() {
+  const on = getVault().isAuthenticated();
+  const btn = $('btn-vault');
+  if (btn) {
+    btn.textContent = on ? 'Vault connected ✓' : 'Connect the Vault';
+    btn.classList.toggle('btn-primary', !on);
+    btn.classList.toggle('btn-ghost', on);
+  }
+  const st = $('vault-status');
+  if (st) {
+    st.textContent = on ? '✓ AI key active · server-side' : '';
+    if (on) show('vault-status'); else hide('vault-status');
+  }
+}
+
+/* remember style only; no key is ever stored */
+function syncProviderUI() {
+  localStorage.setItem('tf_style', $('style').value);
+}
 /* --- Wire up --- */
 function wire() {
   $('btn-connect').addEventListener('click', startOAuth);
@@ -646,17 +622,35 @@ function wire() {
   $('btn-apply').addEventListener('click', applySelected);
   $('btn-undo').addEventListener('click', undoApplied);
   $('btn-export').addEventListener('click', exportCSV);
-  $('provider').addEventListener('change', syncProviderUI);
+  $('btn-vault').addEventListener('click', () => {
+    if (getVault().isAuthenticated()) disconnectVault(); else connectVault();
+  });
+  $('style').addEventListener('change', syncProviderUI);
   $('search').addEventListener('input', renderPreview);
   $('only-changed').addEventListener('change', renderPreview);
   $('token-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') useManualToken(); });
 }
-
 /* --- Init --- */
 wire();
-syncProviderUI();
-const savedProvider = localStorage.getItem('tf_provider');
-if (savedProvider) $('provider').value = savedProvider, syncProviderUI();
+revealAll();
+trackGlow();
+paintRail('connect');
+
+/* if the Vault just redirected back with a code, exchange it now */
+const dvCode = DevVaultClient.codeFromLocation();
+if (dvCode) {
+  getVault().exchangeCode(dvCode, DevVaultClient.redirectUriFromLocation())
+    .then(() => { paintVaultState(); toast("Vault connected — AI key is live.", "ok"); })
+    .catch((e) => { toast("Vault connection failed: " + e.message, "error"); });
+} else {
+  paintVaultState();
+}
+
+const savedStyle = localStorage.getItem('tf_style');
+if (savedStyle) $('style').value = savedStyle;
+
+const savedStyle = localStorage.getItem('tf_style');
+if (savedStyle) $('style').value = savedStyle;
 handleRedirect();
 const saved = sessionStorage.getItem('tf_token');
 if (saved) { token = saved; connected(); }

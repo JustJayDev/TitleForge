@@ -15,29 +15,32 @@
    - **Authorised JavaScript origins:** `https://justjaydev.github.io`
    - **Authorised redirect URIs:** `https://justjaydev.github.io/TitleForge/app.html`
 4. Copy the **Client ID** (looks like `1234-abc….apps.googleusercontent.com`)
-5. Paste it into `app.js`:
-   ```js
-   const CONFIG = {
-     CLIENT_ID: 'your-client-id.apps.googleusercontent.com',
-     ...
-   };
-   ```
-6. Open `app.html` → **Connect with Google** → **Load videos** → **⚡ Forge titles**
+5. Open `app.html` → **Connect with Google** → **Load videos** → **Connect the Vault** → **⚡ Forge titles**
 
 That's it. No server, no database, no backend.
 
 ---
 
-## 🤖 AI providers
+## 🔐 AI through the Developer Vault
 
-| Provider | Setup | Notes |
-|----------|-------|-------|
-| **Default (free)** | None — works out of the box | Runs on a free OpenAI-compatible gateway. To enable it, set `CONFIG.DEFAULT_AI.key` in `app.js` |
-| **OpenAI** | Paste API key | `gpt-4o-mini` |
-| **Claude** | Paste API key | `claude-3-5-haiku-latest` |
-| **Gemini** | Paste API key | `gemini-1.5-flash` |
+The AI key is **never shipped in this repo or in the browser bundle.** TitleForge
+calls the [Developer Vault](https://devvault.justjaydev.workers.dev), which holds
+the key server-side and applies the `youtube-ai` project policy (least privilege):
 
-API keys are used only for direct browser→provider requests and are never stored or logged.
+```
+browser (video metadata only) → Vault → AI provider
+                              ↑ key decrypts here, never leaves
+```
+
+**One-time setup (operator):**
+
+1. Open the [Vault UI](https://devvault.justjaydev.workers.dev) and log in
+2. **Projects → YouTube AI → policy** is already granted `title_forge`
+3. **Secrets → YouTube AI → New secret**, type `api_key`, paste your key
+4. In TitleForge: **Connect the Vault** → approve → forge. The token lives in
+   JS memory only and expires in 1 hour.
+
+No key is ever written to `localStorage`, logged, or echoed to the browser.
 
 ---
 
@@ -51,7 +54,7 @@ API keys are used only for direct browser→provider requests and are never stor
 - **Bulk apply** — rename hundreds of videos with a progress bar
 - **Undo** — revert applied titles back to originals at any time
 - **Export CSV** — take the whole forge report offline
-- **Private by design** — zero server storage, fully auditable
+- **Private by design** — zero credential storage in the bundle, fully auditable
 
 ---
 
@@ -69,8 +72,10 @@ API keys are used only for direct browser→provider requests and are never stor
 ```
 ├── index.html   # Landing page
 ├── app.html     # The 4-step app UI
-├── app.js       # Core logic (OAuth, YouTube, AI engine, apply/undo)
+├── app.js       # Core logic (OAuth, YouTube, Vault forge, apply/undo)
+├── vault.js     # Developer Vault client SDK (no credential in it)
 ├── app.css      # App-page styles
+├── premium.css  # Premium layer (Vault card, rail, aurora, motion)
 ├── style.css    # Shared theme (dark neon)
 ├── 404.html     # SPA fallback
 ├── README.md
