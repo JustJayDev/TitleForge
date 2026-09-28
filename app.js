@@ -649,8 +649,7 @@ if (dvCode) {
 const savedStyle = localStorage.getItem('tf_style');
 if (savedStyle) $('style').value = savedStyle;
 
-const savedStyle = localStorage.getItem('tf_style');
-if (savedStyle) $('style').value = savedStyle;
+/* Google OAuth redirect (#access_token=...) */
 handleRedirect();
 const saved = sessionStorage.getItem('tf_token');
 if (saved) { token = saved; connected(); }
