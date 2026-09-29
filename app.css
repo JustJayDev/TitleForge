@@ -125,3 +125,82 @@ tbody tr:hover { background: color-mix(in srgb, var(--acc) 7%, transparent); }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+/* ============================================================
+   Additions: busy states, empty states, a11y, responsive table
+   ============================================================ */
+
+/* Busy button: keeps its width, shows a spinner, blocks clicks. */
+.btn.is-busy { position: relative; color: transparent !important; pointer-events: none; }
+.btn.is-busy::after {
+  content: ''; position: absolute; inset: 0; margin: auto;
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* SEO summary tone */
+.status.seo-good { color: var(--gr); }
+
+/* Empty / filtered-out table state */
+.empty-row td.empty-cell {
+  padding: 34px 18px; text-align: center; color: var(--muted);
+  font-size: 13.5px; line-height: 1.6;
+}
+
+/* Visible focus for keyboard users (inputs keep their own ring) */
+.btn:focus-visible, .faq summary:focus-visible, .nav a:focus-visible {
+  outline: 2px solid var(--acc2); outline-offset: 2px; border-radius: 8px;
+}
+
+/* The table header must stay put while the body scrolls. */
+.scroll thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--card);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
+/* Applied rows read as done. */
+tr.is-applied td.old { text-decoration: none; opacity: .5; }
+tr.is-applied td.new .tf-edit { border-color: color-mix(in srgb, var(--gr) 45%, transparent); }
+
+/* ---- Responsive: the 4-col table does not fit a phone. ----
+   Below 820px each row becomes a stacked card so nothing is cut off. */
+@media (max-width: 820px) {
+  .scroll { border: none; max-height: none; overflow: visible; }
+  .scroll table, .scroll tbody, .scroll tr, .scroll td { display: block; width: 100%; }
+  .scroll thead { display: none; }
+  .scroll tr {
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px; margin-bottom: 10px; background: color-mix(in srgb, var(--bg2) 55%, transparent);
+  }
+  .scroll td { border: none; padding: 3px 0; }
+  .scroll td:first-child { float: right; }
+  .scroll td.old { max-width: none; font-size: 12.5px; }
+  .scroll td.new { min-width: 0; }
+  .tf-edit { min-width: 0 !important; width: 100%; }
+  .scroll td:last-child { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+  .seo-wrap { flex-direction: row; align-items: center; }
+  .empty-row td.empty-cell { border: 1px dashed var(--line); border-radius: 12px; }
+}
+
+/* Very small phones: tighten the app chrome. */
+@media (max-width: 420px) {
+  .app { padding: 18px 10px 48px; }
+  .panel { padding: 15px 13px; border-radius: 12px; }
+  .nav-inner { padding: 12px 14px; }
+  .nav nav { gap: 12px; }
+  .nav nav a:not(.btn) { display: none; }
+  .toolbar .btn { flex: 1 1 auto; justify-content: center; padding: 10px 12px; font-size: 13px; }
+  .toolbar .check-inline, .toolbar .search-input { flex: 1 1 100%; }
+  .search-input { min-width: 0 !important; }
+  .rail-step { flex: 1 1 calc(50% - 4px); justify-content: center; padding: 7px 10px; font-size: 11.5px; }
+  #toasts { left: 10px; right: 10px; bottom: 12px; }
+}
+
+/* Larger screens: give the review table room to breathe. */
+@media (min-width: 1400px) {
+  .app { max-width: 1240px; }
+  .old { max-width: 380px; }
+}

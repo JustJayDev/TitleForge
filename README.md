@@ -1,6 +1,6 @@
 # ⚒️ TitleForge
 
-**AI-powered bulk YouTube title renamer.** Connect your channel, AI analyzes every video, and forges perfect titles — review, then apply in one click. Open source, browser-based, bring-your-own-API or free default.
+**AI-powered bulk YouTube title renamer.** Connect your channel, AI analyzes every video, and forges perfect titles — review, then apply in one click. Open source, browser-based, AI key held server-side by the Developer Vault.
 
 🔗 **Live:** https://justjaydev.github.io/TitleForge/
 
@@ -48,13 +48,30 @@ No key is ever written to `localStorage`, logged, or echoed to the browser.
 
 - **One-click connect** — Google OAuth implicit flow, token stays in `sessionStorage`
 - **Bulk fetch** — every video, paginated, with stats (views/likes/comments)
-- **AI forge** — 4 pluggable providers, 6 concurrent requests for speed
+- **AI forge** — Vault-proxied AI, 3 concurrent batches (20 videos per request) for speed
 - **SEO scoring** — before/after score with ▲/▼ delta on every title
 - **Review table** — edit any title inline, live re-score, char counter, search & filter
 - **Bulk apply** — rename hundreds of videos with a progress bar
 - **Undo** — revert applied titles back to originals at any time
 - **Export CSV** — take the whole forge report offline
 - **Private by design** — zero credential storage in the bundle, fully auditable
+
+---
+
+## ⚠️ YouTube API quota
+
+Renaming is not free in API terms. `videos.list` costs **1 unit**, but
+`videos.update` costs **50 units** per video, and the default daily allowance is
+**10,000 units**. That works out to roughly **195 renames per day**.
+
+The app shows the estimated quota cost next to the Apply button before you
+confirm, so you always know what a bulk apply will spend. If you exceed the
+quota mid-run, the remaining renames fail and the app tells you how many
+succeeded — you can retry the rest the next day.
+
+Undo costs the same 50 units per video, so undo and re-apply together can
+consume a full day's quota on a large channel. Renaming a small, targeted set
+is cheaper than redoing everything.
 
 ---
 

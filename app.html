@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="premium.css" />
 </head>
 <body>
+  <a class="skip" href="#step-connect">Skip to the app</a>
   <header class="nav">
     <div class="nav-inner">
       <a class="logo" href="/TitleForge/"><span class="logo-mark">⚒️</span> <span>TitleForge</span></a>
@@ -58,6 +59,7 @@
       <p class="muted" id="step-fetch-hint">Fetching every video you've uploaded — titles, descriptions, and performance stats.</p>
       <div class="row" style="margin-top:14px">
         <button class="btn btn-primary" id="btn-fetch">Load all videos</button>
+        <button class="btn btn-ghost hidden" id="btn-stop-fetch">Stop</button>
       </div>
       <div class="progress hidden" id="fetch-progress"><div id="fetch-bar"></div></div>
     </div>
@@ -100,6 +102,7 @@
       </div>
       <div class="progress hidden" id="forge-progress"><div id="forge-bar"></div></div>
       <p class="hint" id="forge-status" style="margin-top:10px"></p>
+      <p class="hint" id="forge-hint">Connect the Vault above to enable forging.</p>
     </div>
 
     <!-- STEP 4: Preview + Apply -->
@@ -116,9 +119,11 @@
         <button class="btn btn-ghost" id="btn-select-none">Select none</button>
         <button class="btn btn-ghost" id="btn-export">Export CSV</button>
         <button class="btn btn-primary" id="btn-apply" disabled>Apply selected</button>
+        <button class="btn btn-ghost hidden" id="btn-stop-apply">Stop</button>
         <button class="btn btn-undo hidden" id="btn-undo">↩ Undo applied</button>
       </div>
       <p class="status" id="preview-count" style="margin:10px 0"></p>
+      <p class="hint" id="apply-cost" style="margin:0 0 10px"></p>
       <div class="scroll">
         <table id="preview-table">
           <thead><tr><th style="width:34px"></th><th>Old title</th><th>New title (edit freely)</th><th>SEO</th></tr></thead>

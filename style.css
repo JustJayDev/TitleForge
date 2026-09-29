@@ -61,3 +61,45 @@ a { color: var(--acc2); text-decoration: none; }
 
 .footer { text-align: center; padding: 40px 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
 .footer p + p { margin-top: 6px; }
+
+/* ============================================================
+   Landing page: scroll offset, focus, and responsive nav
+   ============================================================ */
+
+/* Anchored sections must clear the sticky header. */
+html { scroll-behavior: smooth; }
+section[id] { scroll-margin-top: 84px; }
+
+:where(a, button, summary, input, select):focus-visible {
+  outline: 2px solid var(--acc2); outline-offset: 2px; border-radius: 6px;
+}
+
+/* Skip link for keyboard users. */
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--acc); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0;
+  font-weight: 700; font-size: 14px;
+}
+.skip:focus { left: 0; }
+
+@media (max-width: 720px) {
+  .nav nav a:not(.btn) { display: none; }
+  .hero { padding: 64px 18px 44px; }
+  .section { padding: 52px 18px; }
+  .section h2 { font-size: 26px; margin-bottom: 28px; }
+  .hero-actions .btn { flex: 1 1 100%; justify-content: center; }
+  .hero-note { font-size: 11px; }
+  .step, .card { padding: 20px; }
+  .faq details { padding: 14px 16px; }
+}
+
+@media (max-width: 400px) {
+  .nav-inner { padding: 12px 14px; }
+  .logo { font-size: 16px; }
+  .hero h1 { font-size: 30px; }
+  .sub { font-size: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

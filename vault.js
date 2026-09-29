@@ -14,6 +14,28 @@
 
 const DEFAULT_VAULT = 'https://devvault.justjaydev.workers.dev';
 
+/* APIs are inconsistent about the error field: some send a string,
+   some an object, some a nested {error:{message}}. Normalise all of
+   them into a readable sentence so the UI never shows "[object Object]". */
+function errText(j, status) {
+  const fallback = 'HTTP ' + status;
+  if (!j || typeof j !== 'object') {
+    return typeof j === 'string' && j.trim() ? j.trim() : fallback;
+  }
+  const pick = (v) => {
+    if (typeof v === 'string' && v.trim()) return v.trim();
+    if (v && typeof v === 'object') {
+      if (typeof v.message === 'string' && v.message.trim()) return v.message.trim();
+      if (typeof v.error === 'string' && v.error.trim()) return v.error.trim();
+      if (v.error && typeof v.error === 'object' && typeof v.error.message === 'string') {
+        return v.error.message.trim();
+      }
+    }
+    return '';
+  };
+  return pick(j.error) || pick(j.message) || pick(j.raw) || fallback;
+}
+
 class DevVaultClient {
   constructor({
     baseUrl = DEFAULT_VAULT,
@@ -65,7 +87,7 @@ class DevVaultClient {
       body: JSON.stringify({ code, redirect_uri: redirectUri }),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(j.error || `Vault token exchange failed (HTTP ${r.status})`);
+    if (!r.ok) throw new Error(errText(j, r.status));
     this._token = j.access_token;
     this._expiresAt = Date.now() + (j.expires_in || 3600) * 1000;
     /* scrub the code from the URL so it can't be read from history */
@@ -105,7 +127,7 @@ class DevVaultClient {
     const text = await r.text();
     let j = null;
     try { j = JSON.parse(text); } catch { j = { raw: text }; }
-    if (!r.ok) throw new Error(j.error || j.raw || `HTTP ${r.status}`);
+    if (!r.ok) throw new Error(errText(j, r.status));
     return j;
   }
 
@@ -114,6 +136,9 @@ class DevVaultClient {
      (or null slots where the model gave nothing back). */
   async forgeTitles(videos, style) {
     const r = await this._call('/api/proxy/forge/titles', { videos, style });
+    if (!r || !Array.isArray(r.titles)) {
+      throw new Error('Vault returned no titles array. Check the Vault project policy and secret.');
+    }
     return r.titles;
   }
 }
