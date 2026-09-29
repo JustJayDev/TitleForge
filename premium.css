@@ -13,13 +13,10 @@
 }
 .vault-box::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(340px 130px at var(--mx, 50%) var(--my, 0%),
-    color-mix(in srgb, var(--acc2) 16%, transparent), transparent 66%);
-  opacity: 0; transition: opacity 0.35s ease;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--acc2) 7%, transparent), transparent 62%);
 }
-.vault-box:hover::after { opacity: 1; }
 .vault-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.vault-ico { font-size: 22px; flex: none; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--acc2) 55%, transparent)); }
+.vault-ico { font-size: 22px; flex: none; filter: none; }
 .vault-title { font-weight: 800; font-size: 15px; }
 .vault-sub { font-size: 12px; color: var(--muted); margin-top: 2px; max-width: 420px; }
 .vault-box .btn-sm { margin-left: auto; }
@@ -50,30 +47,20 @@
   position: relative;
   box-shadow: 0 10px 34px rgba(0, 0, 0, .28);
 }
-.panel::after {
-  content: ''; position: absolute; inset: 0; border-radius: 14px; pointer-events: none;
-  background: radial-gradient(420px 150px at var(--mx, 50%) var(--my, 0%),
-    color-mix(in srgb, var(--acc) 9%, transparent), transparent 66%);
-  opacity: 0; transition: opacity 0.35s ease;
-}
-.panel:hover::after { opacity: 1; }
+.panel::after { content: none; }
 
 /* ---- hero aurora ---- */
 .hero { position: relative; }
-.hero-aurora { position: absolute; inset: -20% -10% 0; pointer-events: none; z-index: 0; filter: blur(56px); opacity: 0.5; }
-.hero-aurora span { position: absolute; display: block; border-radius: 50%; animation: auroraDrift 18s ease-in-out infinite alternate; }
+.hero-aurora { position: absolute; inset: -20% -10% 0; pointer-events: none; z-index: 0; filter: blur(72px); opacity: 0.32; }
+.hero-aurora span { position: absolute; display: block; border-radius: 50%; /* static field of light — no drift */ }
 .hero-aurora span:nth-child(1) { width: 44vw; height: 44vw; left: -6%; top: -12%; background: radial-gradient(circle, color-mix(in srgb, var(--acc) 42%, transparent), transparent 66%); }
 .hero-aurora span:nth-child(2) { width: 36vw; height: 36vw; right: -4%; top: 4%; background: radial-gradient(circle, color-mix(in srgb, var(--acc2) 34%, transparent), transparent 66%); animation-delay: -6s; }
 .hero-aurora span:nth-child(3) { width: 28vw; height: 28vw; left: 34%; bottom: -20%; background: radial-gradient(circle, color-mix(in srgb, var(--acc2) 20%, transparent), transparent 66%); animation-delay: -11s; }
-@keyframes auroraDrift {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  50%  { transform: translate3d(4vw, -3vh, 0) scale(1.08); }
-  100% { transform: translate3d(-3vw, 2vh, 0) scale(0.96); }
-}
+
 .hero > * { position: relative; z-index: 1; }
 
 /* ---- staggered reveal ---- */
-.rise { opacity: 0; transform: translateY(20px); transition: opacity 0.6s cubic-bezier(0.16, 0.84, 0.24, 1), transform 0.6s cubic-bezier(0.16, 0.84, 0.24, 1); }
+.rise { opacity: 0; transform: translateY(14px); transition: opacity 0.55s cubic-bezier(0.16, 0.84, 0.24, 1), transform 0.55s cubic-bezier(0.16, 0.84, 0.24, 1); }
 .rise.in { opacity: 1; transform: none; }
 .rise.d1 { transition-delay: 0.06s; }
 .rise.d2 { transition-delay: 0.12s; }
@@ -88,6 +75,10 @@
 .toast { backdrop-filter: blur(10px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-aurora span { animation: none; }
-  .rise { opacity: 1; transform: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important; transition-delay: 0s !important;
+  }
+  .rise { opacity: 1 !important; transform: none !important; }
+  .text-shimmer { animation: none !important; }
 }

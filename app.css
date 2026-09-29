@@ -59,7 +59,7 @@ label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 6px
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
-tbody tr { animation: rowIn .28s cubic-bezier(.2, .8, .3, 1) both; transition: background .15s; }
+tbody tr { transition: background .15s; }
 tbody tr:hover { background: color-mix(in srgb, var(--acc) 7%, transparent); }
 .old { color: var(--muted); text-decoration: line-through; max-width: 320px; word-break: break-word; }
 .new { color: var(--gr); min-width: 260px; }
@@ -111,7 +111,6 @@ tbody tr:hover { background: color-mix(in srgb, var(--acc) 7%, transparent); }
 
 /* Animations */
 @keyframes panelIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes rowIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 /* Responsive */
 @media (max-width: 720px) {

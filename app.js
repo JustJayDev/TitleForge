@@ -66,7 +66,7 @@ function toast(msg, type = 'info') {
   }, 4200);
 }
 
-/* --- premium: reveal-on-scroll, step rail, cursor glow --- */
+/* --- premium: step rail + reveal --- */
 function paintRail(active) {
   document.querySelectorAll('.rail-step').forEach((el) => {
     const name = el.dataset.step;
@@ -80,18 +80,6 @@ function revealAll() {
   document.querySelectorAll('.rise').forEach((el) => el.classList.add('in'));
 }
 
-function trackGlow() {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  window.addEventListener("pointermove", (e) => {
-    document.querySelectorAll('.panel, .vault-box').forEach((el) => {
-      const r = el.getBoundingClientRect();
-      if (e.clientX < r.left - 60 || e.clientX > r.right + 60 ||
-          e.clientY < r.top - 60 || e.clientY > r.bottom + 60) return;
-      el.style.setProperty("--mx", ((e.clientX - r.left) / r.width * 100).toFixed(1) + "%");
-      el.style.setProperty("--my", ((e.clientY - r.top) / r.height * 100).toFixed(1) + "%");
-    });
-  }, { passive: true });
-}
 /* --- OAuth (Google, implicit flow) --- */
 function startOAuth() {
   if (!CONFIG.CLIENT_ID || CONFIG.CLIENT_ID.startsWith('PASTE_')) {
@@ -632,8 +620,6 @@ function wire() {
 }
 /* --- Init --- */
 wire();
-revealAll();
-trackGlow();
 paintRail('connect');
 
 /* if the Vault just redirected back with a code, exchange it now */
