@@ -76,9 +76,6 @@ function paintRail(active) {
   });
 }
 
-function revealAll() {
-  document.querySelectorAll('.rise').forEach((el) => el.classList.add('in'));
-}
 
 /* --- OAuth (Google, implicit flow) --- */
 function startOAuth() {
