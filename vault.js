@@ -36,6 +36,62 @@ function errText(j, status) {
   return pick(j.error) || pick(j.message) || pick(j.raw) || fallback;
 }
 
+/* ---------- in-memory token store ----------
+   The Google access token lives HERE and nowhere else: a module-level
+   variable inside the JS heap. It is never written to localStorage,
+   sessionStorage, cookies or IndexedDB, so it cannot survive a reload
+   and cannot be read by anything that does not already have script
+   execution in this page.
+
+   This mirrors the DevVaultClient._token pattern below and the PixVault
+   reference client: same-tab memory only, cleared on disconnect. */
+
+// Refresh this many ms BEFORE actual expiry, so a token is never handed
+// to YouTube in the moment it lapses.
+const EXPIRY_MARGIN_MS = 60_000;
+
+let ytToken = null;      // Google access token, memory only
+let ytExpiresAt = 0;
+
+export function setToken(t, expiresInSeconds = 3600) {
+  ytToken = t || null;
+  ytExpiresAt = ytToken ? Date.now() + (expiresInSeconds || 3600) * 1000 : 0;
+  return ytToken;
+}
+
+export function getToken() {
+  return ytToken;
+}
+
+export function clearToken() {
+  ytToken = null;
+  ytExpiresAt = 0;
+}
+
+/* True only when a token exists AND has not expired (minus margin). */
+export function isTokenValid() {
+  return !!ytToken && Date.now() < (ytExpiresAt - EXPIRY_MARGIN_MS);
+}
+
+/* Milliseconds until expiry, or 0 when there is no token. */
+export function tokenTtlMs() {
+  if (!ytToken) return 0;
+  return Math.max(0, ytExpiresAt - Date.now());
+}
+
+/* NOTE — why there is no silent refresh:
+   Google OAuth is running the IMPLICIT flow (response_type: 'token').
+   That flow NEVER issues a refresh_token, so once this 1-hour access
+   token expires it cannot be renewed without a new user consent round
+   trip. There is no code that could fix this client-side; it would
+   require migrating to response_type: 'code' + PKCE and a client secret,
+   which would break the "zero-dependency, no backend" property that is
+   TitleForge's whole point.
+
+   TODO(migration): if the Google token ever needs to outlive an hour,
+   switch to the authorization-code + PKCE flow in startOAuth(). Until
+   then, callers must re-prompt via startOAuth() / useManualToken(). */
+
 class DevVaultClient {
   constructor({
     baseUrl = DEFAULT_VAULT,

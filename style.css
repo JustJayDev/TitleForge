@@ -10,6 +10,8 @@
   --gr: #74e29a;
   --red: #ff6b6b;
   --mono: 'JetBrains Mono', monospace;
+  /* Minimum touch target floor, matching DevVault. */
+  --tap: 44px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
@@ -102,4 +104,40 @@ section[id] { scroll-margin-top: 84px; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  /* Collapse every animation and transition in the document. This is
+     deliberately the same shape as the blocks in app.css and
+     premium.css, so the three agree rather than conflict. */
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+  /* Anything revealed by a scroll/IO animation must end up visible. */
+  .rise, [class*="rise"], [class*="reveal"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
+
+/* ============================================================
+   44px touch targets.
+   The hit area is grown with padding/min-height rather than by
+   enlarging the visible control, so the visual design is unchanged.
+   ============================================================ */
+.btn,
+nav a,
+.faq summary,
+.footer a,
+.rail-step,
+.nav .logo, a.skip {
+  min-height: var(--tap);
+}
+.btn { min-width: var(--tap); justify-content: center; }
+nav a, .footer a { display: inline-flex; align-items: center; }
+input[type="text"], input[type="password"], input:not([type]) { min-height: var(--tap); }
+.faq summary { display: flex; align-items: center; }
+
+/* Keyboard focus must stay clearly visible on the new main landmark. */
+main:focus { outline: none; }

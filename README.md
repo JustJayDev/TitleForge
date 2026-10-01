@@ -113,14 +113,43 @@ It's a static site — any host works. For GitHub Pages:
 
 ---
 
-## 🔒 Privacy
+## Security model
 
-- Your Google token lives only in the current browser tab (`sessionStorage`) and is cleared when you close it
-- Video data goes directly browser → YouTube / AI provider. No middle server exists
-- API keys never leave the browser except to their own provider
+This section describes exactly what the code does. If it ever stops being
+true, fix the code or fix this section - do not ship a claim the code does
+not support.
+
+**1. The AI key never reaches the browser.**
+The AI provider key is held by the Developer Vault. The browser calls
+`POST /api/proxy/forge/titles`, the Vault adds the key server-side, and only
+titles come back. There is no key in any shipped file, and `build.mjs`
+fails the build if a secret-shaped string appears in one.
+
+**2. The Google token is held in memory only, never persisted.**
+It lives in a module-level variable inside `vault.js`, reachable only through
+`getToken()` / `setToken()` / `clearToken()`. It is never written to
+`localStorage`, `sessionStorage`, cookies or IndexedDB.
+
+Consequence, by design: **refreshing the page or closing the tab ends the
+session** and you re-connect. That is the trade for not persisting a
+credential. The only thing still stored is the non-secret `tf_style`
+preference (your chosen title style).
+
+**3. The consent flow is mandatory.**
+Nothing is called until a token exists. `loadVideos()` and every other Vault
+or YouTube path check `isTokenValid()` first and stop with a visible message
+if it fails. There is no background call and no silent reconnect.
+
+**4. Token lifetime is 1 hour; re-auth is required after expiry.**
+Google OAuth here uses the **implicit flow** (`response_type: 'token'`), which
+never issues a refresh token. Once the hour is up the token genuinely cannot
+be renewed without you. `isTokenValid()` treats a token as invalid 60 seconds
+*before* real expiry so a lapsed token is never sent, and the UI asks you to
+reconnect instead of firing a request that will fail.
+
+**5. Video data goes browser -> YouTube directly.** No middle server exists.
 
 ---
-
 ## 📝 License
 
 MIT © [JustJayDev](https://github.com/JustJayDev)

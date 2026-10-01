@@ -1,4 +1,4 @@
-import { DevVaultClient } from './vault.js';
+import { DevVaultClient, setToken, getToken, clearToken, isTokenValid, tokenTtlMs } from './vault.js';
 
 /* =============================================================
  * TitleForge — core app logic
@@ -8,8 +8,10 @@ import { DevVaultClient } from './vault.js';
 
 const $ = (id) => document.getElementById(id);
 
-/* --- State --- */
-let token = '';
+/* --- State ---
+   The Google token is NOT declared here. It lives inside vault.js as a
+   module-level variable and is reached only through getToken()/setToken().
+   Nothing in this file writes it to any storage API. */
 let videos = [];
 let forged = [];
 let appliedHistory = [];
@@ -120,8 +122,7 @@ function handleRedirect() {
   const h = new URLSearchParams(window.location.hash.substring(1));
   const t = h.get('access_token');
   if (t) {
-    token = t;
-    sessionStorage.setItem('tf_token', t);
+    setToken(t, Number(h.get('expires_in')) || 3600);
     history.replaceState(null, '', window.location.pathname + window.location.search);
     return true;
   }
@@ -131,8 +132,8 @@ function handleRedirect() {
 function useManualToken() {
   const t = $('token-input').value.trim();
   if (!t) { toast('Paste an access token first.', 'warn'); return; }
-  token = t;
-  sessionStorage.setItem('tf_token', t);
+  setToken(t, 3600);
+  $('token-input').value = '';
   connected();
 }
 
@@ -162,8 +163,7 @@ async function connected() {
 }
 
 function disconnect() {
-  token = '';
-  sessionStorage.removeItem('tf_token');
+  clearToken();
   videos = []; forged = []; appliedHistory = []; connectedChannel = null;
   fetchAbort = false; applyAbort = false; forgeAbort = false;
   hide('step-fetch'); hide('step-ai'); hide('step-preview');
@@ -180,14 +180,13 @@ async function ytFetch(path) {
   let res;
   try {
     res = await fetch('https://www.googleapis.com/youtube/v3/' + path, {
-      headers: { Authorization: 'Bearer ' + token },
+      headers: { Authorization: 'Bearer ' + getToken() },
     });
   } catch (e) {
     throw new Error('Network error reaching YouTube. Check your connection.');
   }
   if (res.status === 401) {
-    sessionStorage.removeItem('tf_token');
-    token = '';
+    clearToken();
     throw new Error('Your Google session expired. Please reconnect.');
   }
   if (res.status === 403) {
@@ -210,7 +209,13 @@ async function ytFetch(path) {
 
 async function loadVideos() {
   const btn = $('btn-fetch');
-  if (!token) { toast('Connect your channel first.', 'warn'); return; }
+  if (!isTokenValid()) {
+    // The Google OAuth implicit flow issues no refresh token, so an
+    // expired token genuinely cannot be renewed without the user. Fail
+    // with a clear instruction instead of firing a doomed request.
+    toast('Your Google session expired. Reconnect to continue.', 'warn');
+    return;
+  }
   busy(btn, true, 'Loading…');
   fetchAbort = false;
   show('fetch-progress');
@@ -750,13 +755,13 @@ async function updateTitle(id, title) {
   const item = { id: id, snippet: { title: String(title).slice(0, 100) } };
   const res = await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet', {
     method: 'PUT',
-    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    headers: { Authorization: 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
     body: JSON.stringify(item),
   });
   if (!res.ok) {
     const e = await res.json().catch(function () { return {}; });
     if (res.status === 401) {
-      sessionStorage.removeItem('tf_token');
+      clearToken();
       throw new Error('Session expired - reconnect and retry.');
     }
     const reason = (e.error && e.error.errors && e.error.errors[0] && e.error.errors[0].reason) || '';
@@ -928,10 +933,9 @@ if (dvCode) {
     .catch(function (e) { paintVaultState(); toast('Vault connection failed: ' + msgOf(e), 'error'); });
 }
 
-/* Google OAuth redirect - run connected() exactly once. */
+/* Google OAuth redirect - run connected() exactly once.
+   With the token held only in memory, a page refresh deliberately lands
+   back on the connect step: there is nothing to restore from, by design. */
 if (handleRedirect()) {
-  connected();
-} else {
-  const saved = sessionStorage.getItem('tf_token');
-  if (saved) { token = saved; connected(); }
+connected();
 }

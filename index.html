@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="premium.css" />
 </head>
 <body>
-  <a class="skip" href="#how">Skip to content</a>
+  <a class="skip" href="#main">Skip to content</a>
   <header class="nav">
     <div class="nav-inner">
       <a class="logo" href="/TitleForge/">
@@ -26,6 +26,7 @@
     </div>
   </header>
 
+  <main id="main">
   <section class="hero">
     <div class="hero-aurora" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="badge rise d1">Free · Open Source · Browser-based</div>
@@ -54,7 +55,7 @@
       <div class="card"><h3>🤖 AI Title Engine</h3><p>Content-aware titles tuned to what performs best on your channel.</p></div>
       <div class="card"><h3>🧠 Vault-Backed AI</h3><p>The AI key lives server-side in the Developer Vault. It never reaches your browser.</p></div>
       <div class="card"><h3>⚡ Bulk Apply</h3><p>Rename 10 or 1,000 videos in one click with live progress.</p></div>
-      <div class="card"><h3>🔒 Private by Design</h3><p>Google token in sessionStorage only. The AI key never enters the page. Open source.</p></div>
+      <div class="card"><h3>🔒 Private by Design</h3><p>Google token held in memory only — never written to storage. The AI key never enters the page. Open source.</p></div>
       <div class="card"><h3>📊 SEO Score</h3><p>See click-worthiness before &amp; after for every title.</p></div>
       <div class="card"><h3>↩️ Undo</h3><p>Roll back any rename instantly. No lock-in.</p></div>
     </div>
@@ -64,12 +65,13 @@
     <h2>FAQ</h2>
     <div class="faq">
       <details><summary>Is it really free?</summary><p>Yes — the app is free and open source. You need a channel to work on, and an AI key held by the Developer Vault (one-time setup, described in the README).</p></details>
-      <details><summary>Is my data safe?</summary><p>Your Google token lives only in your browser's sessionStorage and is cleared when you close the tab. We never store it.</p></details>
+      <details><summary>Is my data safe?</summary><p>Your Google token is held in the page's memory only — never in localStorage, sessionStorage or cookies. It is cleared the moment you disconnect or close the tab. We never store it anywhere.</p></details>
       <details><summary>How many videos can I rename?</summary><p>As many as you have. The YouTube API gives 10,000 free quota units/day per project.</p></details>
       <details><summary>Do I need to be technical?</summary><p>No. Connect with Google, review the preview, click apply. That's it.</p></details>
     </div>
   </section>
 
+  </main>
   <footer class="footer">
     <p><strong>TitleForge</strong> — built by <a href="https://justjaydev.github.io/" target="_blank" rel="noreferrer">JustJayDev</a></p>
     <p class="mono">MIT Licensed · <a href="https://github.com/JustJayDev/TitleForge" target="_blank" rel="noreferrer">GitHub</a></p>
