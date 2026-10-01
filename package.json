@@ -1,0 +1,14 @@
+{
+  "name": "titleforge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Forge better YouTube titles. Vanilla JS/CSS/HTML, zero runtime dependencies.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "smoke": "node smoke.mjs",
+    "check": "node build.mjs && node smoke.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
